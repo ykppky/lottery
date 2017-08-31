@@ -37,6 +37,4 @@ HTML抽奖转盘，随机数概率式抽奖
 3.lottery_userbase
 ![](./src/lottery_userbase.jpg)
 
-
-# DEMO #
-[http://wximg.gzxd120.com/Lottery/](http://wximg.gzxd120.com/lottery/ "http://wximg.gzxd120.com/lottery/")
+###
