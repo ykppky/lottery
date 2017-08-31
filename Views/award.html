@@ -1,0 +1,366 @@
+<!DOCTYPE html">
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽奖转盘</title>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./Public/css/award.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="./Public/js/awardRotate.js"></script>
+
+    <script>
+        var turnplate = {
+            restaraunts: [], //大转盘奖品名称
+            colors: [], //大转盘奖品区块对应背景颜色
+            outsideRadius: 192, //大转盘外圆的半径
+            textRadius: 155, //大转盘奖品位置距离圆心的距离
+            insideRadius: 68, //大转盘内圆的半径
+            startAngle: 0, //开始角度
+            bRotate: false //false:停止;ture:旋转
+        };
+
+        //全局变量
+        var aflag = <?php echo $arr_award['ishidden'] ?>; //抽奖标记
+        var adate = "<?php echo date('Y-m-d H:i', $arr_award['adate']) ?>"; //抽奖日期
+        var atype = <?php echo ($arr_award['award'] + 1) ?>;    //获得的奖品
+
+        $(document).ready(function() {
+            //动态添加大转盘的奖品与奖品区域背景颜色
+            turnplate.restaraunts = ["一等奖", "二等奖", "三等奖", "不中奖", "二等奖", "三等奖", "不中奖", "二等奖", "三等奖", "不中奖"];
+            turnplate.colors = ["#FFF4D6", "#FFFFFF", "#FFF4D6", "#FFFFFF", "#FFF4D6", "#FFFFFF", "#FFF4D6", "#FFFFFF", "#FFF4D6", "#FFFFFF"];
+
+            //旋转超时
+            var rotateTimeOut = function() {
+                $('#wheelcanvas').rotate({
+                    angle: 0,
+                    animateTo: 2160,
+                    duration: 8000,
+                    callback: function() {
+                        alert('网络超时，请检查您的网络设置！');
+                    }
+                });
+            };
+
+            //领奖令牌按钮点击事件
+            $("#invcode").click(function() {
+                if (aflag) { //如果还没抽奖，弹出还没抽奖提示框
+                    $("#tips-title").text("抽奖提示");
+                    $("#tips-body").text("您还没有抽奖，请点击开始抽奖按钮！");
+                    $('#div-tips').modal({
+                        backdrop: false
+                    });
+                    return;
+                }
+                window.location.href = "index.php?c=Lottery&a=getAwardToken";
+            });
+
+            //提示框-领奖令牌按钮点击事件
+            $("#btn-award").click(function() {
+                window.location.href = "index.php?c=Lottery&a=getAwardToken";
+            });
+
+            //获奖列表按钮点击事件
+            $("#btn-award-list").click(function() {
+                window.location.href = "index.php?c=Lottery&a=awardList";
+            });
+
+            //旋转转盘 item:奖品位置; txt：提示语;
+            var rotateFn = function(item, txt) {
+                var angles = item * (360 / turnplate.restaraunts.length) - (360 / (turnplate.restaraunts.length * 2));
+                if (angles < 270) {
+                    angles = 270 - angles;
+                } else {
+                    angles = 360 - angles + 270;
+                }
+                $('#wheelcanvas').stopRotate();
+                $('#wheelcanvas').rotate({
+                    angle: 0,
+                    animateTo: angles + 1800,
+                    duration: 8000,
+                    callback: function() {
+                        //定制提示框内容
+                        if(atype == "4"){   //不中奖时
+                            $("#tips-title-award").text("抽奖结果");
+                            $("#tips-body-award").html("<span style='font-size:16px;'>真抱歉，你没有抽到任何奖品！</span>");
+                        }else{
+                            $("#tips-title-award").text("抽奖结果");
+                            $("#tips-body-award").html("<span style='font-size:16px;'>恭喜你获得<span style='color:red;font-weight:bold;'>" + txt + "</span></span>");
+                        }
+                        //弹出提示框
+                        $('#div-tips-award').modal({
+                            backdrop: false
+                        });
+                        //使“开始抽奖”可以点击
+                        //turnplate.bRotate = !turnplate.bRotate; 
+                        //---------------ajax提交抽奖请求-------------------
+                        var url_get = "index.php?c=Lottery&a=markAwardStatus";
+                        $.get(url_get, function(data, status) {
+                            //不执行任何动作
+                        });
+                        //把抽奖标记为已抽奖
+                        aflag = false;
+                    }
+                });
+            };
+
+            //“开始抽奖”点击事件
+            $('.pointer').click(function() {
+                if (turnplate.bRotate) return;
+                //如果已经抽奖，弹出提示框后返回，不再转动
+                if (!aflag) {
+                    $("#tips-title-award").text("抽奖提示");
+                    $("#tips-body-award").text("您已于" + adate + "进行了抽奖，每个人只能抽一次奖哦！您可以打开领奖令牌去领奖啦！");
+                    $('#div-tips-award').modal({
+                        backdrop: false
+                    });
+                    return;
+                }
+                turnplate.bRotate = !turnplate.bRotate;
+                //获取随机数（前端随机抽取奖品）
+                //   var item = rnd(1, turnplate.restaraunts.length);
+                //使用服务器随机指定的奖品
+                item = atype;
+                //奖品数量等于10,指针落在对应奖品区域的中心角度[252, 216, 180, 144, 108, 72, 36, 360, 324, 288]
+                rotateFn(item, turnplate.restaraunts[item - 1]);
+                /* switch (item) {
+                	case 1:
+                		rotateFn(252, turnplate.restaraunts[0]);
+                		break;
+                	case 2:
+                		rotateFn(216, turnplate.restaraunts[1]);
+                		break;
+                	case 3:
+                		rotateFn(180, turnplate.restaraunts[2]);
+                		break;
+                	case 4:
+                		rotateFn(144, turnplate.restaraunts[3]);
+                		break;
+                	case 5:
+                		rotateFn(108, turnplate.restaraunts[4]);
+                		break;
+                	case 6:
+                		rotateFn(72, turnplate.restaraunts[5]);
+                		break;
+                	case 7:
+                		rotateFn(36, turnplate.restaraunts[6]);
+                		break;
+                	case 8:
+                		rotateFn(360, turnplate.restaraunts[7]);
+                		break;
+                	case 9:
+                		rotateFn(324, turnplate.restaraunts[8]);
+                		break;
+                	case 10:
+                		rotateFn(288, turnplate.restaraunts[9]);
+                		break;
+                } */
+                console.log(item);
+            });
+
+            //弹出已经抽奖提示框
+            if (!aflag) {
+                $("#tips-title-award").text("抽奖提示");
+                $("#tips-body-award").text("您已于" + adate + "进行了抽奖，每个人只能抽一次奖哦！您可以打开领奖令牌去领奖啦！");
+                $('#div-tips-award').modal({
+                    backdrop: false
+                });
+            }
+
+        });
+
+        //获取指定随机数
+        function rnd(n, m) {
+            var random = Math.floor(Math.random() * (m - n + 1) + n);
+            return random;
+
+        }
+
+        //页面所有元素加载完毕后执行drawRouletteWheel()方法对转盘进行渲染
+        window.onload = function() {
+            drawRouletteWheel();
+        };
+
+        //在canvas中画出旋转盘
+        function drawRouletteWheel() {
+            var canvas = document.getElementById("wheelcanvas");
+            if (canvas.getContext) {
+                //根据奖品个数计算圆周角度
+                var arc = Math.PI / (turnplate.restaraunts.length / 2);
+                var ctx = canvas.getContext("2d");
+                //在给定矩形内清空一个矩形
+                ctx.clearRect(0, 0, 422, 422);
+                //strokeStyle 属性设置或返回用于笔触的颜色、渐变或模式  
+                ctx.strokeStyle = "#FFBE04";
+                //font 属性设置或返回画布上文本内容的当前字体属性
+                ctx.font = '16px Microsoft YaHei';
+                for (var i = 0; i < turnplate.restaraunts.length; i++) {
+                    var angle = turnplate.startAngle + i * arc;
+                    ctx.fillStyle = turnplate.colors[i];
+                    ctx.beginPath();
+                    //arc(x,y,r,起始角,结束角,绘制方向) 方法创建弧/曲线（用于创建圆或部分圆）    
+                    ctx.arc(211, 211, turnplate.outsideRadius, angle, angle + arc, false);
+                    ctx.arc(211, 211, turnplate.insideRadius, angle + arc, angle, true);
+                    ctx.stroke();
+                    ctx.fill();
+                    //锁画布(为了保存之前的画布状态)
+                    ctx.save();
+
+                    //----绘制奖品开始----
+                    ctx.fillStyle = "#E5302F";
+                    var text = turnplate.restaraunts[i];
+                    var line_height = 17;
+                    //translate方法重新映射画布上的 (0,0) 位置
+                    ctx.translate(211 + Math.cos(angle + arc / 2) * turnplate.textRadius, 211 + Math.sin(angle + arc / 2) * turnplate.textRadius);
+
+                    //rotate方法旋转当前的绘图
+                    ctx.rotate(angle + arc / 2 + Math.PI / 2);
+
+                    /** 下面代码根据奖品类型、奖品名称长度渲染不同效果，如字体、颜色、图片效果。(具体根据实际情况改变) **/
+                    if (text.indexOf("M") > 0) { //流量包
+                        var texts = text.split("M");
+                        for (var j = 0; j < texts.length; j++) {
+                            ctx.font = j == 0 ? 'bold 20px Microsoft YaHei' : '16px Microsoft YaHei';
+                            if (j == 0) {
+                                ctx.fillText(texts[j] + "M", -ctx.measureText(texts[j] + "M").width / 2, j * line_height);
+                            } else {
+                                ctx.fillText(texts[j], -ctx.measureText(texts[j]).width / 2, j * line_height);
+                            }
+                        }
+                    } else if (text.indexOf("M") == -1 && text.length > 6) { //奖品名称长度超过一定范围 
+                        text = text.substring(0, 6) + "||" + text.substring(6);
+                        var texts = text.split("||");
+                        for (var j = 0; j < texts.length; j++) {
+                            ctx.fillText(texts[j], -ctx.measureText(texts[j]).width / 2, j * line_height);
+                        }
+                    } else {
+                        //在画布上绘制填色的文本。文本的默认颜色是黑色
+                        //measureText()方法返回包含一个对象，该对象包含以像素计的指定字体宽度
+                        ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
+                    }
+
+                    //添加对应图标
+                    if (text.indexOf("一等奖") > 0) {
+                        var img = document.getElementById("shan-img");
+                        img.onload = function() {
+                            ctx.drawImage(img, -15, 10);
+                        };
+                        ctx.drawImage(img, -15, 10);
+                    }
+                    if (text.indexOf("不中奖") >= 0) {
+                        var img = document.getElementById("sorry-img");
+                        img.onload = function() {
+                            ctx.drawImage(img, -15, 10);
+                        };
+                        ctx.drawImage(img, -15, 10);
+                    }
+                    //把当前画布返回（调整）到上一个save()状态之前 
+                    ctx.restore();
+                    //----绘制奖品结束----
+                }
+            }
+        }
+
+    </script>
+</head>
+
+<body style="background:#7CD8E3;overflow-x:hidden;">
+    <div id="wrap">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-10 col-xs-offset-1">
+                    <div class="a-title">模拟抽奖箱逻辑-抽奖转盘</div>
+                </div>
+            </div>
+            <div class="award">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="banner">
+                            <div class="turnplate" style="background-image:url(./Public/images/game/turnplate-bg.png);background-size:100% 100%;">
+                                <canvas class="item" id="wheelcanvas" width="422px" height="422px"></canvas>
+                                <img class="pointer" src="./Public/images/game/turnplate-pointer.png" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="award-action">
+                <div class="row">
+                    <div class="col-xs-8 col-xs-offset-2">
+                        <a href="#">
+                            <button id="btn-award-list" type="button" class="btn btn-danger btn-lg btn-block">
+                                <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span> 获奖列表
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="award-action">
+                <div class="row">
+                    <div class="col-xs-8 col-xs-offset-2">
+                        <button type="button" id="invcode" class="btn btn-primary btn-lg btn-block">
+                            <span class="glyphicon glyphicon-modal-window" aria-hidden="true"></span> 领奖令牌
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+                <div class="row">
+                    <div class="col-xs-6 col-xs-offset-3">
+                        <div class="foot-text">
+                            <p></p>
+                            <p>
+                                <a href="#" target="_blank"></a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <img src="./Public/images/game/1.png" id="shan-img" style="display:none;" />
+    <img src="./Public/images/game/2.png" id="sorry-img" style="display:none;" />
+
+    <!--  抽奖提示框  -->
+    <div class="modal fade" id="div-tips-award" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="tips-title-award">抽奖结果</h4>
+                </div>
+                <div class="modal-body" id="tips-body-award">
+                    功能升级中，开发者：Greatfar。
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btn-award" class="btn btn-primary">领奖令牌</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--  提示框  -->
+    <div class="modal fade" id="div-tips" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="tips-title">提示</h4>
+                </div>
+                <div class="modal-body" id="tips-body">
+                    功能升级中，开发者：Greatfar。
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btn-confirm" class="btn btn-primary" data-dismiss="modal">确定</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

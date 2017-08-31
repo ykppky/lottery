@@ -1,0 +1,67 @@
+ <?php
+    $awardtype = "";
+    switch ($arr_sqldata[award]){
+        case 0:
+          $awardtype = "一等奖";
+          break;
+        case 1:
+          $awardtype = "二等奖";
+          break;
+        case 2:
+          $awardtype = "三等奖";
+          break;
+        case 3:
+          $awardtype = "不中奖";
+          break;
+    }
+?>
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="renderer" content="webkit">
+    <title>领奖令牌</title>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./Public/css/base.css" rel="stylesheet">
+    <link href="./Public/css/token.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+</head>
+
+<body>
+    <div id="wrap">
+        <div class="container">
+            <div class="row">
+                <img src="./Public/images/token-header.png" class="img-responsive">
+            </div>
+            <div class="awardlist">
+                <div class="row">
+                    <div class="col-xs-12">
+                        奖品：<span class="awardtype"><?php echo $awardtype; ?></span>
+                    </div>
+                </div>
+            </div>
+            <div class="upNav">
+                <div class="row">
+                    <div class="col-xs-6 col-xs-offset-3">
+                        <img class="img-responsive img-circle" src='<?php echo $arr_sqldata[headimgurl]; ?>' />
+                    </div>
+                </div>
+            </div>
+                <div class="nickname">
+                    <div class="row">
+                        <div class="col-xs-12 namecolor">
+                            <?php echo $arr_sqldata[nickname]; ?>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </div>
+</body>
+
+</html>

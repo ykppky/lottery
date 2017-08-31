@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>获奖列表</title>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <!--            <h2 class="sub-header">获奖名单</h2>-->
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>头像</th>
+                            <th>姓名</th>
+                            <th>时间</th>
+                            <th>奖品</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                             foreach ($arr_sqldata as $arr_awardinfo) {
+                                $awardtype = "";
+                                switch ($arr_awardinfo[award]){
+                                    case 0:
+                                      $awardtype = "一等奖";
+                                      break;
+                                    case 1:
+                                      $awardtype = "二等奖";
+                                      break;
+                                    case 2:
+                                      $awardtype = "三等奖";
+                                      break;
+                                    case 3:
+                                      $awardtype = "不中奖";
+                                      break;
+                                }
+                                echo "<tr>";
+                                echo "<td><img width='28px' src='".$arr_awardinfo[headimgurl]."'/></td>";
+                                echo "<td>$arr_awardinfo[nickname]</td>";
+                                echo "<td>".date('Y-m-d H:i', $arr_awardinfo['adate'])."</td>";
+                                echo "<td>$awardtype</td>";
+                                echo "</tr>";
+                            }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <nav aria-label="Page navigation" style="text-align: center">
+                <ul class="pagination">
+                    <?php
+                        if ($page != 1) {   //页数不等于1
+                    ?>
+                        <li id="pav_li_<?php echo $page - 1; ?>">
+                            <a href="index.php?c=Lottery&a=awardList&page=<?php echo $page - 1; ?>" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    <?php
+                        }
+                        for($i=$startPage; $i<=$endPage; $i++) {  //循环显示页码列表
+                    ?>
+                        <li id="pav_li_<?php echo $i; ?>">
+                            <a href="index.php?c=Lottery&a=awardList&page=<?php echo $i; ?>">
+                                <?php echo $i; ?>
+                            </a>
+                        </li>
+                    <?php
+                        }
+                        if($page < $totalPage) {   //如果page小于总页数,显示下一页链接
+                    ?>
+                        <li id="pav_li_<?php echo $page+1; ?>">
+                            <a href="index.php?c=Lottery&a=awardList&page=<?php echo $page+1; ?>" aria-label="Previous">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    <?php
+                        }
+                    ?>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <script>
+        var this_page = <?php echo $page; ?> ;
+        $(document).ready(function(){    
+            if(this_page == 1){
+                $(".pagination li:eq(0)").addClass("active");
+            }else{
+                $(".pagination li#pav_li_<?php echo $page;?>").addClass("active");
+            }
+        });
+    </script>
+</body>
+
+</html>
