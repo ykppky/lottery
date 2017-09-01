@@ -25,7 +25,7 @@ HTML抽奖转盘，随机数概率式抽奖
 9. 并发访问文件锁
 10. PHP随机数概率控制
 11. PHP文件读写操作
-
+12. test
 
 # MySQL Table #
 1.lottery_award
